@@ -1,4 +1,4 @@
-### File Organizer and Analyzer
+### File Organizer and Analyzer of "Downloads" folder for Mac:
 
 This Python program organizes files in the user's "Downloads" directory and provides analysis on the types of files found. It consists of the following steps:
 
