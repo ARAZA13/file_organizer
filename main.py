@@ -2,7 +2,7 @@ import os
 import csv
 from datetime import datetime
 from shutil import copy2
-import matplotlib.pyplot as plt
+
 
 # Step 1: Get the user's home directory and append "Downloads" to it
 directory_path = os.path.expanduser("~") + "/Downloads"
@@ -15,6 +15,9 @@ files_data = []
 
 for filename in os.listdir(directory_path):
     file_path = os.path.join(directory_path, filename)
+    # Skip the DD directory itself if it already exists
+    if filename == "DD":
+        continue
     if os.path.isfile(file_path):
         file_name, file_extension = os.path.splitext(filename)
         date_added = datetime.fromtimestamp(os.path.getctime(file_path))
@@ -34,16 +37,22 @@ for file_data in files_data:
 
     if file_extension:
         # Create subfolder for each file type
-        file_type_folder = os.path.join(file_type_directory, file_extension[1:])
+        file_type_folder = os.path.join(file_type_directory, file_extension[1:] if len(file_extension) > 1 else "other")
         os.makedirs(file_type_folder, exist_ok=True)
 
         # Copy the file to the relevant subfolder
         destination_path = os.path.join(file_type_folder, file_name + file_extension)
-        copy2(file_path, destination_path)
+        try:
+            copy2(file_path, destination_path)
+        except Exception as e:
+            print(f"Failed to copy {file_path} to {destination_path}: {e}")
     else:
         # Copy files without a file type to the "missing" folder
         destination_path = os.path.join(missing_directory, file_name)
-        copy2(file_path, destination_path)
+        try:
+            copy2(file_path, destination_path)
+        except Exception as e:
+            print(f"Failed to copy {file_path} to {destination_path}: {e}")
 
 # Step 6: Save the table as a .csv file inside the "DD" folder
 csv_file_path = os.path.join(file_type_directory, "file_stats.csv")
@@ -70,14 +79,17 @@ for file_type in file_types:
     else:
         file_type_counts[file_type] = 1
 
-plt.bar(file_type_counts.keys(), file_type_counts.values())
-plt.xlabel("File Type")
-plt.ylabel("Number of Files")
-plt.title("Number of Files by File Type")
+try:
+    import matplotlib.pyplot as plt
+    plt.bar(file_type_counts.keys(), file_type_counts.values())
+    plt.xlabel("File Type")
+    plt.ylabel("Number of Files")
+    plt.title("Number of Files by File Type")
 
-# Save the bar graph in the "DD" folder
-bar_graph_path = os.path.join(file_type_directory, "file_type_bar_graph.png")
-plt.savefig(bar_graph_path)
-plt.show()
-
-print(f"Bar graph saved to {bar_graph_path}")
+    # Save the bar graph in the "DD" folder
+    bar_graph_path = os.path.join(file_type_directory, "file_type_bar_graph.png")
+    plt.savefig(bar_graph_path)
+    plt.show()
+    print(f"Bar graph saved to {bar_graph_path}")
+except ImportError:
+    print("matplotlib is not installed. Skipping bar graph generation.")
